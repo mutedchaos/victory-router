@@ -1,3 +1,4 @@
+import { ActualType, BasicType, parseValue, parsingFailed, ParsingFailed } from './parsers'
 import { QueryParameters, RouterContextData } from './routerContext'
 
 type ExtractedValue<T> = {
@@ -18,39 +19,76 @@ export abstract class RouteParameter<T> {
   }
 }
 
-export abstract class QueryParameter<T> extends RouteParameter<T> {
-  constructor(public readonly name: string) {
+type QueryParameterOptions = { required: true } | { required: false }
+
+type ApplyRequiredness<TType, TRequired> = TRequired extends true ? TType : TType | undefined
+
+export abstract class QueryParameterBase<
+  T,
+  TQueryParameterOptions extends QueryParameterOptions
+> extends RouteParameter<ApplyRequiredness<T, TQueryParameterOptions['required']>> {
+  constructor(public readonly name: string, private options: TQueryParameterOptions) {
     super()
   }
-}
 
-export class RequiredQueryParameter extends QueryParameter<string> {
-  constructor(name: string) {
-    super(name)
-  }
-
-  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<string> {
+  extractValue(
+    pathElements: string[],
+    queryParameters: QueryParameters
+  ): ExtractedValue<ApplyRequiredness<T, TQueryParameterOptions['required']>> {
     const value = queryParameters[this.name]
-    if (!value) return null
-    return { value, remainingPath: pathElements }
+    if (value === undefined && this.options.required) return null
+    const parsedValue = this.parseValue(value)
+
+    if (parsedValue instanceof ParsingFailed) return null
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value: parsedValue as any,
+      remainingPath: pathElements,
+    }
+  }
+
+  abstract parseValue(value: string | undefined): T | ParsingFailed
+}
+
+export class QueryParameter<
+  TOptions extends QueryParameterOptions,
+  TType extends BasicType = StringConstructor
+> extends QueryParameterBase<ActualType<TType>, TOptions> {
+  constructor(name: string, options: TOptions, private type?: TType) {
+    super(name, options)
+  }
+
+  parseValue(value: string | undefined): ActualType<TType> | ParsingFailed {
+    if (value === undefined) {
+      if (this.type === Boolean) {
+        return false
+      }
+      return parsingFailed
+    }
+    return parseValue(value, this.type ?? String)
   }
 }
 
-export class OptionalQueryParameter extends QueryParameter<string | undefined> {
-  constructor(name: string) {
-    super(name)
-  }
-
-  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<string | undefined> {
-    return { value: queryParameters[this.name], remainingPath: pathElements }
-  }
-}
-
-export class PathParameter extends RouteParameter<string> {
+export abstract class PathParameterBase<T> extends RouteParameter<T> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  extractValue(pathElements: string[], _queryParameters: QueryParameters): ExtractedValue<string> {
+  extractValue(pathElements: string[], _queryParameters: QueryParameters): ExtractedValue<T> {
     if (!pathElements.length) return null
-    return { value: pathElements[0], remainingPath: pathElements.slice(1) }
+    const parsed = this.parseValue(pathElements[0])
+    if (parsed instanceof ParsingFailed) return null
+    return { value: parsed, remainingPath: pathElements.slice(1) }
+  }
+
+  abstract parseValue(value: string): T | ParsingFailed
+}
+
+export class PathParameter<TType extends BasicType = StringConstructor> extends PathParameterBase<ActualType<TType>> {
+  constructor(private type?: TType) {
+    super()
+  }
+
+  parseValue(value: string): ActualType<TType> | ParsingFailed {
+    return parseValue(value, this.type ?? String)
   }
 }
 

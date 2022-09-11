@@ -1,7 +1,7 @@
-import { RouterProvider, Route, route } from 'victory-router'
+import { RouterProvider, Route, route, QueryParameter } from 'victory-router'
 import React from 'react'
 import './App.css'
-import { dynamicParameter, queryOptional, queryRequired } from './parameters'
+import { dynamicNumberParameter, dynamicParameter, queryOptional, queryRequired } from './parameters'
 import { WithDynamic } from './WithDynamic'
 import { OutputParam } from './OutputParam'
 
@@ -27,6 +27,9 @@ function App() {
             <Route route="b">
               <p>Hello from a/d/b</p>
             </Route>
+          </Route>
+          <Route route={dynamicNumberParameter}>
+            <OutputParam param={dynamicNumberParameter}>Number param</OutputParam>
           </Route>
         </Route>
         <Route route="b">
@@ -71,6 +74,16 @@ function App() {
         </Route>
         <Route route={'/hardcoded?!query'}>
           <p>Hard coded query, no query</p>
+        </Route>
+        <h2>Types</h2>
+        <Route route={new QueryParameter('typed', { required: false }, Number)}>
+          <p>Number</p>
+        </Route>
+        <Route route={new QueryParameter('typed', { required: false }, Boolean)}>
+          <p>Boolean</p>
+        </Route>
+        <Route route={new QueryParameter('typed', { required: false }, String)}>
+          <p>String</p>
         </Route>
         <hr />
         <h1>Composer</h1>
