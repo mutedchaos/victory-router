@@ -66,6 +66,12 @@ function App() {
         <Route route={'/hardcoded?query='}>
           <p>Hard coded query, no value</p>
         </Route>
+        <Route route={'/hardcoded?query!=value'}>
+          <p>Hard coded query, not exactly value</p>
+        </Route>
+        <Route route={'/hardcoded?!query'}>
+          <p>Hard coded query, no query</p>
+        </Route>
         <hr />
         <h1>Composer</h1>
         <Route route={route`/test/path/${dynamicParameter}?${queryOptional}`}>

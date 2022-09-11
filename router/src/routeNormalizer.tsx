@@ -47,14 +47,28 @@ export function normalizeRoute(route: UnNormalizedRoute): NormalizedRoute {
           if (lastSeparator === '?' || lastSeparator === '&') {
             if (stringRouteElement.includes('=')) {
               const index = stringRouteElement.indexOf('=') // using index in case value has an equals in it
-              output.push(
-                new QueryMatcher(
-                  stringRouteElement.substring(0, index),
-                  decodeURIComponent(stringRouteElement.substring(index + 1))
+              if (stringRouteElement[index - 1] === '!') {
+                output.push(
+                  new QueryMatcher(
+                    stringRouteElement.substring(0, index - 1),
+                    decodeURIComponent(stringRouteElement.substring(index + 1)),
+                    true
+                  )
                 )
-              )
+              } else {
+                output.push(
+                  new QueryMatcher(
+                    stringRouteElement.substring(0, index),
+                    decodeURIComponent(stringRouteElement.substring(index + 1))
+                  )
+                )
+              }
             } else {
-              output.push(new QueryPresenseMatcher(stringRouteElement))
+              if (stringRouteElement.startsWith('!')) {
+                output.push(new QueryPresenseMatcher(stringRouteElement.substring(1), true))
+              } else {
+                output.push(new QueryPresenseMatcher(stringRouteElement))
+              }
             }
           } else {
             output.push(new ConstantPathElement(stringRouteElement))

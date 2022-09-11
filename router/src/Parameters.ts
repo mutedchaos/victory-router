@@ -75,25 +75,36 @@ export class NormalizationToken extends RouteParameter<void> {
 export const normalizationToken = new NormalizationToken()
 
 export class QueryPresenseMatcher extends RouteParameter<void> {
-  constructor(public readonly name: string) {
+  constructor(public readonly name: string, public readonly negated = false) {
     super()
   }
 
   extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<void> {
-    if (!(this.name in queryParameters)) return null
+    if (!(this.name in queryParameters) !== this.negated) return null
     return { value: void 0, remainingPath: pathElements }
   }
 }
 
-export class QueryMatcher extends RouteParameter<void> {
-  constructor(public readonly name: string, public readonly value: string) {
+export class QueryMatcher extends RouteParameter<string> {
+  constructor(public readonly name: string, public readonly value: string | RegExp, public readonly negated = false) {
     super()
   }
 
-  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<void> {
-    if (!(this.name in queryParameters)) return null
-    if (queryParameters[this.name] !== this.value) return null
+  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<string> {
+    if (!(this.name in queryParameters)) {
+      if (this.negated) return { value: '', remainingPath: pathElements }
+      return null
+    }
 
-    return { value: this.value, remainingPath: pathElements }
+    const value = queryParameters[this.name]
+    if (this.isMatch(value) === this.negated) return null
+
+    return { value, remainingPath: pathElements }
+  }
+
+  private isMatch(value: string) {
+    if (typeof this.value === 'string') return value === this.value
+
+    return Boolean(value.match(this.value))
   }
 }
