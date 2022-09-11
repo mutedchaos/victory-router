@@ -2,7 +2,7 @@ import { RouteParameter } from './Parameters'
 import { memoizedNormalizeRoute, NormalizedRoute } from './routeNormalizer'
 
 export function composeRoute(
-  stringValues: string[],
+  stringValues: TemplateStringsArray,
   ...routeElements: Array<RouteParameter<unknown>>
 ): NormalizedRoute {
   const asSimpleArray = stringValues
