@@ -1,34 +1,42 @@
 import { memoizeForArrayParameter } from './memoizeForArrayParameter'
-import { ConstantPathElement, normalizationToken, PathParameter, QueryParameter, RouteParameter } from './Parameters'
+import {
+  ConstantPathElement,
+  normalizationToken,
+  PathParameter,
+  QueryMatcher,
+  QueryParameter,
+  QueryPresenseMatcher,
+  RouteParameter,
+} from './Parameters'
 
 export type UnNormalizedRoute = string | RouteParameter<unknown> | Array<RouteParameter<unknown> | string>
 
 export type NormalizedRoute = Array<RouteParameter<unknown>>
 
 export function normalizeRoute(route: UnNormalizedRoute): NormalizedRoute {
-  const arr = makeArray(route)
+  const routeElements = makeArray(route)
 
   const output: NormalizedRoute = [normalizationToken]
 
-  const isPrenormalized = arr[0] === normalizationToken
+  const isPrenormalized = routeElements[0] === normalizationToken
 
   let lastSeparator = ''
-  for (const item of arr) {
-    if (typeof item === 'string') {
-      for (const part of item.split(/(?=[/?&])|(?<=[/?&])/)) {
-        if (part === '') {
+  for (const routeElement of routeElements) {
+    if (typeof routeElement === 'string') {
+      for (const stringRouteElement of routeElement.split(/(?=[/?&])|(?<=[/?&])/)) {
+        if (stringRouteElement === '') {
           // do nothing
-        } else if (part === '/') {
+        } else if (stringRouteElement === '/') {
           if (lastSeparator && lastSeparator !== '/') {
             throw new Error('Not expecting / after ?')
           }
           lastSeparator = '/'
-        } else if (part === '&') {
+        } else if (stringRouteElement === '&') {
           if (lastSeparator !== '?' && lastSeparator !== '&') {
             throw new Error('Not expecting & before ?')
           }
           lastSeparator = '&'
-        } else if (part === '?') {
+        } else if (stringRouteElement === '?') {
           if (lastSeparator === '&') {
             throw new Error('Not expectecting ? after &')
           }
@@ -36,32 +44,43 @@ export function normalizeRoute(route: UnNormalizedRoute): NormalizedRoute {
           // ? followed by ? is fine though
           lastSeparator = '?'
         } else {
-          if (lastSeparator && lastSeparator !== '/') {
-            throw new Error('Not expecting "' + part + '" after ?')
+          if (lastSeparator === '?' || lastSeparator === '&') {
+            if (stringRouteElement.includes('=')) {
+              const index = stringRouteElement.indexOf('=') // using index in case value has an equals in it
+              output.push(
+                new QueryMatcher(
+                  stringRouteElement.substring(0, index),
+                  decodeURIComponent(stringRouteElement.substring(index + 1))
+                )
+              )
+            } else {
+              output.push(new QueryPresenseMatcher(stringRouteElement))
+            }
+          } else {
+            output.push(new ConstantPathElement(stringRouteElement))
+            lastSeparator = '/'
           }
-          output.push(new ConstantPathElement(part))
-          lastSeparator = '/'
         }
       }
-    } else if (item instanceof ConstantPathElement) {
+    } else if (routeElement instanceof ConstantPathElement) {
       if (lastSeparator && lastSeparator !== '/' && !isPrenormalized) {
         throw new Error('Not expecting ConstantPathElement after ?')
       }
-      output.push(item)
-    } else if (item instanceof PathParameter) {
+      output.push(routeElement)
+    } else if (routeElement instanceof PathParameter) {
       if (lastSeparator && lastSeparator !== '/' && !isPrenormalized) {
         throw new Error('Not expecting a PathParameter after ?')
       }
-      output.push(item)
-    } else if (item instanceof QueryParameter) {
+      output.push(routeElement)
+    } else if (routeElement instanceof QueryParameter) {
       if (lastSeparator !== '?' && lastSeparator !== '&' && !isPrenormalized) {
-        throw new Error('Not expecting "' + item.name + ' before ?')
+        throw new Error('Not expecting "' + routeElement.name + ' before ?')
       }
-      output.push(item)
-    } else if (item === normalizationToken) {
+      output.push(routeElement)
+    } else if (routeElement === normalizationToken) {
       // do nothing
     } else {
-      throw new Error('Unexpected: ' + item)
+      throw new Error('Unexpected: ' + routeElement)
     }
   }
   return output

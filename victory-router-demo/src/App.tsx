@@ -56,6 +56,16 @@ function App() {
         <Route exact route={queryOptional}>
           <OutputParam param={queryOptional}>optional exact</OutputParam>
         </Route>
+        <h2>Hardcoded</h2>
+        <Route route={'/hardcoded?query=value'}>
+          <p>Hard coded query, exact value</p>
+        </Route>
+        <Route route={'/hardcoded?query'}>
+          <p>Hard coded query, any value</p>
+        </Route>
+        <Route route={'/hardcoded?query='}>
+          <p>Hard coded query, no value</p>
+        </Route>
         <hr />
         <h1>Composer</h1>
         <Route route={route`/test/path/${dynamicParameter}?${queryOptional}`}>

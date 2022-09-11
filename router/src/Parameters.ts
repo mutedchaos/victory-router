@@ -73,3 +73,27 @@ export class NormalizationToken extends RouteParameter<void> {
 }
 
 export const normalizationToken = new NormalizationToken()
+
+export class QueryPresenseMatcher extends RouteParameter<void> {
+  constructor(public readonly name: string) {
+    super()
+  }
+
+  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<void> {
+    if (!(this.name in queryParameters)) return null
+    return { value: void 0, remainingPath: pathElements }
+  }
+}
+
+export class QueryMatcher extends RouteParameter<void> {
+  constructor(public readonly name: string, public readonly value: string) {
+    super()
+  }
+
+  extractValue(pathElements: string[], queryParameters: QueryParameters): ExtractedValue<void> {
+    if (!(this.name in queryParameters)) return null
+    if (queryParameters[this.name] !== this.value) return null
+
+    return { value: this.value, remainingPath: pathElements }
+  }
+}
