@@ -1,4 +1,4 @@
-import { RouterProvider, Route, route, QueryParameter } from 'victory-router'
+import { RouterProvider, Route, route, QueryParameter, RoutingSet, FallbackRoute } from 'victory-router'
 import React from 'react'
 import './App.css'
 import { dynamicNumberParameter, dynamicParameter, queryOptional, queryRequired } from './parameters'
@@ -94,6 +94,27 @@ function App() {
         <h1>Fallback</h1>
         <Route route={'fallback-match'} fallback={<p>This is fallback</p>}>
           <p>This is match</p>
+        </Route>
+        <h1>Routing set</h1>
+        <Route route="/set">
+          <RoutingSet>
+            <p>In set.</p>
+            <Route route="/a">
+              <p>A</p>
+            </Route>
+            <Route route="/b">
+              <p>B</p>
+            </Route>
+            <Route route="/c">
+              <p>C</p>
+            </Route>
+            <Route route="/d">
+              <p>D</p>
+            </Route>
+            <FallbackRoute>
+              <p>FALLBACK</p>
+            </FallbackRoute>
+          </RoutingSet>
         </Route>
       </div>
     </RouterProvider>

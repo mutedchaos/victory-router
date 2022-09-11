@@ -1,6 +1,7 @@
 import React, { ReactNode, useContext, useMemo } from 'react'
 import { normalizeRoute, UnNormalizedRoute } from './routeNormalizer'
 import { NestedRouterProvider, routerContext } from './routerContext'
+import { useRoutingSet } from './routingSet'
 
 interface Props {
   route: UnNormalizedRoute
@@ -14,6 +15,8 @@ const noMatch = { isMatch: false, remainingPath: [], newParameterValues: new Map
 export function Route({ route, children, exact, fallback }: Props) {
   const rc = useContext(routerContext)
   if (!rc) throw new Error('RouterProvider must be in applied')
+
+  const routingSet = useRoutingSet()
   const { pathComponents, queryParameters, parameterValues } = rc
 
   const normalizedRoute = useMemo(() => normalizeRoute(route), [route])
@@ -37,6 +40,8 @@ export function Route({ route, children, exact, fallback }: Props) {
       newParameterValues: newParams,
     }
   }, [exact, normalizedRoute, parameterValues, pathComponents, queryParameters])
+
+  routingSet.setActive(isMatch)
 
   if (!isMatch) return fallback ? <>{fallback}</> : null
 
