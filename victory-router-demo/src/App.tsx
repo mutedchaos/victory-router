@@ -76,13 +76,13 @@ function App() {
           <p>Hard coded query, no query</p>
         </Route>
         <h2>Types</h2>
-        <Route route={new QueryParameter('typed', { required: false }, Number)}>
+        <Route route={new QueryParameter({ name: 'typed', required: false, type: Number })}>
           <p>Number</p>
         </Route>
-        <Route route={new QueryParameter('typed', { required: false }, Boolean)}>
+        <Route route={new QueryParameter({ name: 'typed', required: false, type: Boolean })}>
           <p>Boolean</p>
         </Route>
-        <Route route={new QueryParameter('typed', { required: false }, String)}>
+        <Route route={new QueryParameter({ name: 'typed', required: false, type: String })}>
           <p>String</p>
         </Route>
         <hr />

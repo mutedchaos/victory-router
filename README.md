@@ -99,7 +99,7 @@ Victory router supports path and query parameters.
 The parameters are defined outside of react components, for example in a separate file.
 
     import { PathParameter, QueryParameter } from 'victory-router'
-    const searchQuery = new QueryParameter('query', { required: true })
+    const searchQuery = new QueryParameter({ name: 'query', required: true })
     const searchContext = new PathParameter()
 
 There are two ways to use the parameters in a route definition.
@@ -148,11 +148,11 @@ The default PathParameter and QueryParameter classes support the following data 
 - number
 - boolean
 
-You can indicate the type of the parameter by passing the constructor of the boxed version of the type as an additional parameter to the parameter constructors
+You can indicate the type of the parameter by passing the constructor of the boxed version of the type as type in options.
 
     import { PathParameter, QueryParameter } from 'victory-router'
-    const useDarkMode = new QueryParameter('darkMode', { required: true }, Boolean)
-    const pageNumberParam = new PathParameter(Number)
+    const useDarkMode = new QueryParameter({ name: 'darkMode', required: true, type: Boolean})
+    const pageNumberParam = new PathParameter({type: Number})
 
 Failed parsing treats the route as not matching, fallback can be used here to show an error message, if desired.
 

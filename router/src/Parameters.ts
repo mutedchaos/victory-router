@@ -19,7 +19,7 @@ export abstract class RouteParameter<T> {
   }
 }
 
-type QueryParameterOptions = { required: true } | { required: false }
+type QueryParameterOptions = { name: string } & ({ required: true } | { required: false })
 
 type ApplyRequiredness<TType, TRequired> = TRequired extends true ? TType : TType | undefined
 
@@ -29,15 +29,19 @@ export abstract class QueryParameterBase<
   T,
   TQueryParameterOptions extends QueryParameterOptions
 > extends RouteParameter<ApplyRequiredness<T, TQueryParameterOptions['required']>> {
-  constructor(public readonly name: string, private options: TQueryParameterOptions) {
+  constructor(private options: TQueryParameterOptions) {
     super()
+  }
+
+  get name() {
+    return this.options.name
   }
 
   extractValue(
     pathElements: string[],
     queryParameters: QueryParameters
   ): ExtractedValue<ApplyRequiredness<T, TQueryParameterOptions['required']>> {
-    const value = queryParameters[this.name]
+    const value = queryParameters[this.options.name]
     if (value === undefined && this.options.required) return null
     const parsedValue = this.parseValue(value)
 
@@ -53,22 +57,29 @@ export abstract class QueryParameterBase<
   abstract parseValue(value: ParseValueParam<TQueryParameterOptions['required']>): T | ParsingFailed
 }
 
-export class QueryParameter<
-  TOptions extends QueryParameterOptions,
-  TType extends BasicType = StringConstructor
-> extends QueryParameterBase<ActualType<TType>, TOptions> {
-  constructor(name: string, options: TOptions, private type?: TType) {
-    super(name, options)
+type TypedQueryParameterOptions<T extends BasicType> = QueryParameterOptions & {
+  type?: T
+}
+
+type GetQueryType<T> = T extends TypedQueryParameterOptions<infer U> ? (U extends BasicType ? U : never) : never
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class QueryParameter<TOptions extends TypedQueryParameterOptions<any>> extends QueryParameterBase<
+  ActualType<GetQueryType<TOptions>>,
+  TOptions
+> {
+  constructor(private typedOptions: TOptions) {
+    super(typedOptions)
   }
 
-  parseValue(value: string | undefined): ActualType<TType> | ParsingFailed {
+  parseValue(value: string | undefined): ActualType<GetQueryType<TOptions>> | ParsingFailed {
     if (value === undefined) {
-      if (this.type === Boolean) {
+      if (this.typedOptions.type === Boolean) {
         return false
       }
       return parsingFailed
     }
-    return parseValue(value, this.type ?? String)
+    return parseValue(value, this.typedOptions.type ?? String)
   }
 }
 
@@ -85,12 +96,12 @@ export abstract class PathParameterBase<T> extends RouteParameter<T> {
 }
 
 export class PathParameter<TType extends BasicType = StringConstructor> extends PathParameterBase<ActualType<TType>> {
-  constructor(private type?: TType) {
+  constructor(private options: { type?: TType } = {}) {
     super()
   }
 
   parseValue(value: string): ActualType<TType> | ParsingFailed {
-    return parseValue(value, this.type ?? String)
+    return parseValue(value, this.options.type ?? String)
   }
 }
 
