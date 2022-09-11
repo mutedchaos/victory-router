@@ -62,6 +62,10 @@ function App() {
           <OutputParam param={dynamicParameter}>Dynamic</OutputParam>
           <OutputParam param={queryOptional}>QueryOpt</OutputParam>
         </Route>
+        <h1>Fallback</h1>
+        <Route route={'fallback-match'} fallback={<p>This is fallback</p>}>
+          <p>This is match</p>
+        </Route>
       </div>
     </RouterProvider>
   )

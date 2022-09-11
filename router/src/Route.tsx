@@ -6,11 +6,12 @@ interface Props {
   route: UnNormalizedRoute
   children: ReactNode
   exact?: boolean
+  fallback?: ReactNode
 }
 
 const noMatch = { isMatch: false, remainingPath: [], newParameterValues: new Map() }
 
-export function Route({ route, children, exact }: Props) {
+export function Route({ route, children, exact, fallback }: Props) {
   const rc = useContext(routerContext)
   if (!rc) throw new Error('RouterProvider must be in applied')
   const { pathComponents, queryParameters, parameterValues } = rc
@@ -37,7 +38,7 @@ export function Route({ route, children, exact }: Props) {
     }
   }, [exact, normalizedRoute, parameterValues, pathComponents, queryParameters])
 
-  if (!isMatch) return null
+  if (!isMatch) return fallback ? <>{fallback}</> : null
 
   return (
     <NestedRouterProvider pathComponents={remainingPath} parameterValues={newParameterValues}>
