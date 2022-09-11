@@ -1,0 +1,26 @@
+{
+  "name": "victory-router",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npm run tsc",
+    "tsc": "tsc --project tsconfig.json",
+    "prepare": "npm run build"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": ">= 18.0.0"
+  },
+  "dependencies": {
+    "query-string": "^7.1.1"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  }
+}
