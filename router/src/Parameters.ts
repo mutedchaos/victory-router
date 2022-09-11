@@ -23,6 +23,8 @@ type QueryParameterOptions = { required: true } | { required: false }
 
 type ApplyRequiredness<TType, TRequired> = TRequired extends true ? TType : TType | undefined
 
+type ParseValueParam<T> = T extends true ? string : string | undefined
+
 export abstract class QueryParameterBase<
   T,
   TQueryParameterOptions extends QueryParameterOptions
@@ -48,7 +50,7 @@ export abstract class QueryParameterBase<
     }
   }
 
-  abstract parseValue(value: string | undefined): T | ParsingFailed
+  abstract parseValue(value: ParseValueParam<TQueryParameterOptions['required']>): T | ParsingFailed
 }
 
 export class QueryParameter<
